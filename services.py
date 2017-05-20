@@ -35,7 +35,7 @@ def get_database(vcap, dbname):
 
     user = creds['username']
     password = creds['password']
-    url = creds['host']
+    url = 'https://' + creds['host']
 
     client = Cloudant(user, password, url=url, connect=True)
     db = client.create_database(dbname, throw_on_exists=False)
