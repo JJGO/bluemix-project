@@ -8,7 +8,6 @@ from watson_developer_cloud import TextToSpeechV1
 from watson_developer_cloud import SpeechToTextV1
 from watson_developer_cloud import VisualRecognitionV3
 from watson_developer_cloud import NaturalLanguageUnderstandingV1
-from watson_developer_cloud import NaturalLanguageClassifierV1
 
 service_dict = {
     'language_translator': LanguageTranslatorV2,
@@ -66,22 +65,3 @@ def get_watson_service(vcap, name):
             handler = cls(username=user, password=password, url=url)
 
     return handler
-
-# def get_translator(vcap):
-#     creds = vcap['language_translator'][0]['credentials']
-
-#     user = creds['username']
-#     password = creds['password']
-#     url = LanguageTranslatorV2.default_url
-
-#     translator = LanguageTranslatorV2(username=user, password=password, url=url)
-
-#     return translator
-
-
-# def get_text_to_speech(vcap):
-#     creds = vcap['text_to_speech'][0]['credentials']
-
-#     user = creds['username']
-#     password = creds['password']
-#     url = TextToSpeechV1
