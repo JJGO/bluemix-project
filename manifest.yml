@@ -1,0 +1,12 @@
+---
+applications:
+ - name: bluemix-project
+   random-route: false
+   memory: 128M
+   services:
+   - Cloudant NoSQL DB-xf
+   - Language Translator-lk
+   - Texto a voz-w7
+   - Voz a texto-dw
+   - Visual Recognition-30
+   - Natural Language Understanding-9b
