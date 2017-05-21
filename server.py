@@ -5,6 +5,7 @@ import os
 import random
 from services import load_credentials, get_database, get_watson_service, teardown_databases
 import sys
+import datetime
 
 # Emit Bluemix deployment event
 cf_deployment_tracker.track()
@@ -42,6 +43,18 @@ def home():
 # */
 
 
+@app.route('/api/recent')
+def recent_searches():
+    user = get_user()
+    db, client = get_database(app.config['DATABASE'])
+
+    past_searches = [(doc['name'], doc['timestamp']) for doc in db if doc['user'] == user][::-1]
+
+    sorted_searches = [name for (name, timestamp) in sorted(past_searches, key=lambda x: x[1], reverse=True)]
+
+    return jsonify(sorted_searches)
+
+
 @app.route('/api/visitors', methods=['GET'])
 def get_visitor():
     user = get_user()
@@ -74,7 +87,9 @@ def put_visitor():
 
     user = get_user()
 
-    data = {'name': translated_name, 'user': user}
+    timestamp = datetime.datetime.now().isoformat()
+
+    data = {'name': translated_name, 'user': user, 'timestamp': timestamp}
     db.create_document(data)
 
     return 'La traduccion de {0} es {1}'.format(name, translated_name)
