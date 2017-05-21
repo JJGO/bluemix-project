@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, jsonify, session
 import cf_deployment_tracker
+import atexit
 import os
 import random
-from services import get_credentials, get_database, get_watson_service
+from services import load_credentials, get_database, get_watson_service, teardown_databases
 import sys
 
 # Emit Bluemix deployment event
@@ -13,7 +14,7 @@ app = Flask(__name__)
 app.config['DATABASE'] = 'mydb'
 app.secret_key = "\xfd4\xadtJ\x1a'\xed\xe9\x0e`{\xd4\x8a\x11.ah\x87j\t\xad\x9e\xac"
 
-vcap = get_credentials()
+vcap = load_credentials()
 
 
 def get_user():
@@ -45,7 +46,7 @@ def home():
 def get_visitor():
     user = get_user()
 
-    db, client = get_database(vcap, app.config['DATABASE'])
+    db, client = get_database(app.config['DATABASE'])
 
     return jsonify([doc['name'] for doc in db if doc['user'] == user])
 
@@ -66,8 +67,8 @@ def get_visitor():
 def put_visitor():
     name = request.json['name']
     # Translate
-    db, client = get_database(vcap, app.config['DATABASE'])
-    translator = get_watson_service(vcap, 'language_translator')
+    db, client = get_database(app.config['DATABASE'])
+    translator = get_watson_service('language_translator')
 
     translated_name = translator.translate(name, source='es', target='en')
 
@@ -79,12 +80,15 @@ def put_visitor():
     return 'La traduccion de {0} es {1}'.format(name, translated_name)
 
 
+@atexit.register
+def shutdown():
+    teardown_databases()
+
+
 if __name__ == '__main__':
     debug = False
     if len(sys.argv) > 1:
         if '--debug' in sys.argv:
             debug = True
-
-    init_services()
 
     app.run(host='0.0.0.0', port=port, debug=debug)

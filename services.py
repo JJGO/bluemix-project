@@ -1,6 +1,5 @@
 import os
 import json
-import atexit
 
 from cloudant import Cloudant
 
@@ -19,22 +18,24 @@ service_dict = {
 }
 
 
+vcap = {}
+
 connected_services = {}
 
 databases = {}
 
 
-def get_credentials():
+def load_credentials():
     if 'VCAP_SERVICES' in os.environ:
-        vcap = json.loads(os.getenv('VCAP_SERVICES'))
+        loaded_vcap = json.loads(os.getenv('VCAP_SERVICES'))
     elif os.path.isfile('vcap-local.json'):
         with open('vcap-local.json') as f:
-            vcap = json.load(f)
-            vcap = vcap['services']
-    return vcap
+            loaded_vcap = json.load(f)
+            loaded_vcap = loaded_vcap['services']
+    return vcap.update(loaded_vcap)
 
 
-def get_database(vcap, dbname):
+def get_database(dbname):
     if dbname not in databases:
         assert 'cloudantNoSQLDB' in vcap
 
@@ -52,7 +53,7 @@ def get_database(vcap, dbname):
     return databases[dbname]
 
 
-def get_watson_service(vcap, name):
+def get_watson_service(name):
 
     if name == 'visual-recognition':
         name = 'watson_vision_combined'
@@ -80,10 +81,11 @@ def get_watson_service(vcap, name):
 
 
 def reset_services():
+    load_credentials()
     connected_services.clear()
 
 
-@atexit.register
-def shutdown():
-    for db, client in databases:
+def teardown_databases():
+    for dbname, (db, client) in databases:
+        print('Closing {0}'.format(dbname))
         client.disconnect()
