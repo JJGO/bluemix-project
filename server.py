@@ -62,10 +62,9 @@ def recent_searches():
     return jsonify(sorted_searches)
 
 
-@app.route('/api/analyze-text', methods=['POST', 'GET'])
+@app.route('/api/analyze-text', methods=['POST'])
 def analyze_text():
-    # text = request.json['text']
-    text = "No pienso comer ensalada, es un plato asqueroso e insípido"
+    text = request.json['text']
     translator = get_watson_service('language_translator')
     nlu = get_watson_service('natural-language-understanding')
     text_to_speech = get_watson_service('text_to_speech')
@@ -87,52 +86,12 @@ def analyze_text():
 
     audiourl = url_for('static', filename=audiofile)
 
-    s = render_template('output-text.html', audiourl=audiourl, emotions=emotions)
-
-    with open('test.html', 'w') as f:
-        print(s, file=f)
-
-    return s
+    return render_template('output-text.html', audiourl=audiourl, emotions=emotions)
 
 
-@app.route('/api/visitors', methods=['GET'])
-def get_visitor():
-    user = get_user()
+# @app.route('/api/analyze-image', methods=['POST'])
+# def analyze-image():
 
-    db, client = get_database(app.config['DATABASE'])
-
-    return jsonify([doc['name'] for doc in db if doc['user'] == user])
-
-# /**
-#  * Endpoint to get a JSON array of all the visitors in the database
-#  * REST API example:
-#  * <code>
-#  * GET http://localhost:8080/api/visitors
-#  * </code>
-#  *
-#  * Response:
-#  * [ "Bob", "Jane" ]
-#  * @return An array of all the visitor names
-#  */
-
-
-@app.route('/api/visitors', methods=['POST'])
-def put_visitor():
-    name = request.json['name']
-    # Translate
-    db, client = get_database(app.config['DATABASE'])
-    translator = get_watson_service('language_translator')
-
-    translated_name = translator.translate(name, source='es', target='en')
-
-    user = get_user()
-
-    timestamp = datetime.datetime.now().isoformat()
-
-    data = {'name': translated_name, 'user': user, 'timestamp': timestamp}
-    db.create_document(data)
-
-    return 'La traduccion de {0} es {1}'.format(name, translated_name)
 
 
 @atexit.register
