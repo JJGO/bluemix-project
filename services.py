@@ -9,6 +9,8 @@ from watson_developer_cloud import SpeechToTextV1
 from watson_developer_cloud import VisualRecognitionV3
 from watson_developer_cloud import NaturalLanguageUnderstandingV1
 
+from functools import lru_cache
+
 service_dict = {
     'language_translator': LanguageTranslatorV2,
     'text_to_speech': TextToSpeechV1,
@@ -16,7 +18,6 @@ service_dict = {
     'natural-language-understanding': NaturalLanguageUnderstandingV1,
     'watson_vision_combined': VisualRecognitionV3,
 }
-
 
 vcap = {}
 
@@ -86,6 +87,13 @@ def get_watson_service(name):
 def reset_services():
     load_credentials()
     connected_services.clear()
+
+
+@lru_cache(maxsize=1)
+def get_speech_voices():
+    text_to_speech = get_watson_service('text_to_speech')
+    voices = [x['name'] for x in text_to_speech.voices()['voices']]
+    return voices
 
 
 def teardown_databases():
