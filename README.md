@@ -15,6 +15,6 @@ You'll need the following:
 
 ## Demo
 
-The website can be found [here](http://josejg.com/bluemix-project).
+The website can be found [here](http://bluemix-project.eu-gb.mybluemix.net/).
 
 Also a `jupyter notebook` is provided with [many examples](http://nbviewer.ipython.org/github/JJGO/bluemix-project/blob/master/bluemix-services.ipynb)
