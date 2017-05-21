@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, jsonify
-import atexit
+from flask import Flask, render_template, request, jsonify, session
 import cf_deployment_tracker
+import atexit
 import os
-from services import get_credentials, get_database, get_watson_service
+import random
+from services import load_credentials, get_database, get_watson_service, teardown_databases
 import sys
 
 # Emit Bluemix deployment event
@@ -10,16 +11,19 @@ cf_deployment_tracker.track()
 
 app = Flask(__name__)
 
-vcap = get_credentials()
+app.config['DATABASE'] = 'mydb'
+app.secret_key = "\xfd4\xadtJ\x1a'\xed\xe9\x0e`{\xd4\x8a\x11.ah\x87j\t\xad\x9e\xac"
 
-db_name = 'mydb_translate'
-db, client = get_database(vcap, db_name)
+vcap = load_credentials()
 
-translator = get_watson_service(vcap, 'language_translator')
-text_to_speech = get_watson_service(vcap, 'text_to_speech')
-speech_to_text = get_watson_service(vcap, 'speech_to_text')
-nlu = get_watson_service(vcap, 'natural-language-understanding')
-visual_recognition = get_watson_service(vcap, 'watson_vision_combined')
+
+def get_user():
+    if 'username' not in session:
+        user = str(random.randint(1, 10000))
+        session['username'] = user
+        print('User {0} created'.format(user))
+    return session['username']
+
 
 # On Bluemix, get the port number from the environment variable PORT
 # When running this app on the local machine, default the port to 8080
@@ -40,7 +44,11 @@ def home():
 
 @app.route('/api/visitors', methods=['GET'])
 def get_visitor():
-    return jsonify(list(map(lambda doc: doc['name'], db)))
+    user = get_user()
+
+    db, client = get_database(app.config['DATABASE'])
+
+    return jsonify([doc['name'] for doc in db if doc['user'] == user])
 
 # /**
 #  * Endpoint to get a JSON array of all the visitors in the database
@@ -59,21 +67,28 @@ def get_visitor():
 def put_visitor():
     name = request.json['name']
     # Translate
+    db, client = get_database(app.config['DATABASE'])
+    translator = get_watson_service('language_translator')
+
     translated_name = translator.translate(name, source='es', target='en')
 
-    data = {'name': translated_name}
+    user = get_user()
+
+    data = {'name': translated_name, 'user': user}
     db.create_document(data)
+
     return 'La traduccion de {0} es {1}'.format(name, translated_name)
 
 
 @atexit.register
 def shutdown():
-    client.disconnect()
+    teardown_databases()
 
 
 if __name__ == '__main__':
     debug = False
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'debug':
+        if '--debug' in sys.argv:
             debug = True
+
     app.run(host='0.0.0.0', port=port, debug=debug)
