@@ -24,6 +24,8 @@ connected_services = {}
 
 databases = {}
 
+client = None
+
 
 def load_credentials():
     if 'VCAP_SERVICES' in os.environ:
@@ -36,6 +38,7 @@ def load_credentials():
 
 
 def get_database(dbname):
+    global client
     if dbname not in databases:
         assert 'cloudantNoSQLDB' in vcap
 
@@ -44,8 +47,8 @@ def get_database(dbname):
         user = creds['username']
         password = creds['password']
         url = 'https://' + creds['host']
-
-        client = Cloudant(user, password, url=url, connect=True)
+        if client is None:
+            client = Cloudant(user, password, url=url, connect=True)
         db = client.create_database(dbname, throw_on_exists=False)
 
         databases[dbname] = (db, client)
@@ -86,6 +89,4 @@ def reset_services():
 
 
 def teardown_databases():
-    for dbname, (db, client) in databases:
-        print('Closing {0}'.format(dbname))
-        client.disconnect()
+    client.disconnect()
