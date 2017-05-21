@@ -1,36 +1,69 @@
-<html>
-  <head>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
 
-      function drawChart() {
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['corechart']});
+  google.charts.setOnLoadCallback(drawChart);
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+      ['Emotion', 'Confidence'],
+      {% for emotion, value in emotions.items() %}
+      ['{{ emotion|title }}', {{ (100*value)|int }}],
+      {% endfor %}
+    ]);
+    var options = {
+      title: 'Emotions'
+    };
+    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+    chart.draw(data, options);
+  }
+</script>
 
-        var data = google.visualization.arrayToDataTable([
-          ['Emotion', 'Confidence'],
-          {% for emotion, value in emotions.items() %}
-          ['{{ emotion|title }}', {{ (100*value)|int }}],
-          {% endfor %}
-        ]);
+  <div class="container">
+    <div class="featured-blocks">
+      <div class="row">
+        
+        <div class=" col-md-9">
+          
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Original</h3>
+              <p id="resultado_original"></p>
+              <br>
+              <p> <a href="#" class="btn btn-default" role="button">Reproducir en idioma original</a></p>
+              <br>
+              <h3>Traducción</h3>
+              <p id="resultado_traduccion"></p>
+              <br>
 
-        var options = {
-          title: 'Emotions'
-        };
+              <audio controls>
+                <source src="{{ audiourl }}" type="audio/ogg">
+                Your browser does not support this audio format.
+              </audio>
 
-        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+            </div>
+          </div>
 
-        chart.draw(data, options);
-      }
-    </script>
-  </head>
-  <body>
-    <div id="piechart" style="width: 900px; height: 500px;"></div>
+          <br>
+          
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Análisis de sentimiento</h3>
+              <div id="piechart" style="width: 900px; height: 500px;"></div>
+            </div>
+          </div>
 
-    <audio controls>
-             <source src="{{ audiourl }}" type="audio/ogg">
-             Your browser does not support this audio format.
-     </audio>
+          <br>
 
-  </body>
-</html>
+        </div>
+
+        <div class=" col-md-3">
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Historial</h3>
+              <p id="resultado_historial"> </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>

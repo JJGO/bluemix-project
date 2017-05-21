@@ -86,8 +86,10 @@ def analyze_text():
 
     audiourl = url_for('static', filename=audiofile)
 
-    return render_template('output-text.html', audiourl=audiourl, emotions=emotions)
-
+    s = render_template('output-text.html', audiourl=audiourl, emotions=emotions)
+    with open('text.html', 'w') as f:
+        print(s, file=f)
+    return s
 
 # @app.route('/api/analyze-image', methods=['POST'])
 # def analyze-image():
