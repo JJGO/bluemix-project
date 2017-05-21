@@ -3,6 +3,7 @@ applications:
  - name: bluemix-project
    random-route: false
    memory: 128M
+   buildpack: python_buildpack
    services:
    - Cloudant NoSQL DB-xf
    - Language Translator-lk
