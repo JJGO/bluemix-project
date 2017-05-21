@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, jsonify, session
-import atexit
 import cf_deployment_tracker
 import os
 import random
@@ -15,14 +14,6 @@ app.config['DATABASE'] = 'mydb'
 app.secret_key = "\xfd4\xadtJ\x1a'\xed\xe9\x0e`{\xd4\x8a\x11.ah\x87j\t\xad\x9e\xac"
 
 vcap = get_credentials()
-
-db, client = get_database(vcap, app.config['DATABASE'])
-
-translator = get_watson_service(vcap, 'language_translator')
-text_to_speech = get_watson_service(vcap, 'text_to_speech')
-speech_to_text = get_watson_service(vcap, 'speech_to_text')
-nlu = get_watson_service(vcap, 'natural-language-understanding')
-visual_recognition = get_watson_service(vcap, 'watson_vision_combined')
 
 
 def get_user():
@@ -53,6 +44,9 @@ def home():
 @app.route('/api/visitors', methods=['GET'])
 def get_visitor():
     user = get_user()
+
+    db, client = get_database(vcap, app.config['DATABASE'])
+
     return jsonify([doc['name'] for doc in db if doc['user'] == user])
 
 # /**
@@ -72,19 +66,17 @@ def get_visitor():
 def put_visitor():
     name = request.json['name']
     # Translate
+    db, client = get_database(vcap, app.config['DATABASE'])
+    translator = get_watson_service(vcap, 'language_translator')
+
     translated_name = translator.translate(name, source='es', target='en')
-    
+
     user = get_user()
 
-    data = {'name': translated_name,
-            'user': user}
+    data = {'name': translated_name, 'user': user}
     db.create_document(data)
+
     return 'La traduccion de {0} es {1}'.format(name, translated_name)
-
-
-@atexit.register
-def shutdown():
-    client.disconnect()
 
 
 if __name__ == '__main__':
@@ -92,5 +84,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if '--debug' in sys.argv:
             debug = True
+
+    init_services()
 
     app.run(host='0.0.0.0', port=port, debug=debug)

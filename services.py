@@ -1,5 +1,6 @@
 import os
 import json
+import atexit
 
 from cloudant import Cloudant
 
@@ -18,6 +19,11 @@ service_dict = {
 }
 
 
+connected_services = {}
+
+databases = {}
+
+
 def get_credentials():
     if 'VCAP_SERVICES' in os.environ:
         vcap = json.loads(os.getenv('VCAP_SERVICES'))
@@ -29,18 +35,21 @@ def get_credentials():
 
 
 def get_database(vcap, dbname):
-    assert 'cloudantNoSQLDB' in vcap
+    if dbname not in databases:
+        assert 'cloudantNoSQLDB' in vcap
 
-    creds = vcap['cloudantNoSQLDB'][0]['credentials']
+        creds = vcap['cloudantNoSQLDB'][0]['credentials']
 
-    user = creds['username']
-    password = creds['password']
-    url = 'https://' + creds['host']
+        user = creds['username']
+        password = creds['password']
+        url = 'https://' + creds['host']
 
-    client = Cloudant(user, password, url=url, connect=True)
-    db = client.create_database(dbname, throw_on_exists=False)
+        client = Cloudant(user, password, url=url, connect=True)
+        db = client.create_database(dbname, throw_on_exists=False)
 
-    return db, client
+        databases[dbname] = (db, client)
+
+    return databases[dbname]
 
 
 def get_watson_service(vcap, name):
@@ -48,20 +57,33 @@ def get_watson_service(vcap, name):
     if name == 'visual-recognition':
         name = 'watson_vision_combined'
 
-    cls = service_dict[name]
+    if name not in connected_services:
+        cls = service_dict[name]
 
-    creds = vcap[name][0]['credentials']
+        creds = vcap[name][0]['credentials']
 
-    if name in ['watson_vision_combined']:
-        api_key = creds["api_key"]
-        handler = cls(cls.latest_version, api_key=api_key)
-    else:
-        user = creds['username']
-        password = creds['password']
-        url = cls.default_url
-        if name in ['natural-language-understanding']:
-            handler = cls(cls.latest_version, username=user, password=password, url=url)
+        if name in ['watson_vision_combined']:
+            api_key = creds["api_key"]
+            handler = cls(cls.latest_version, api_key=api_key)
         else:
-            handler = cls(username=user, password=password, url=url)
+            user = creds['username']
+            password = creds['password']
+            url = cls.default_url
+            if name in ['natural-language-understanding']:
+                handler = cls(cls.latest_version, username=user, password=password, url=url)
+            else:
+                handler = cls(username=user, password=password, url=url)
 
-    return handler
+        connected_services[name] = handler
+
+    return connected_services[name]
+
+
+def reset_services():
+    connected_services.clear()
+
+
+@atexit.register
+def shutdown():
+    for db, client in databases:
+        client.disconnect()
