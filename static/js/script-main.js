@@ -28,7 +28,7 @@
           //POST request to API to create a new visitor entry in the database
             $.ajax({
       method: "POST",
-      url: "./api/analyze-text",
+      url: "./api/analyze-image",
       contentType: "application/json",
       data: JSON.stringify({text: text })
     })

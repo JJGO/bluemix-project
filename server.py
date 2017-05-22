@@ -91,9 +91,38 @@ def analyze_text():
     #    print(s, file=f)
     return s
 
-# @app.route('/api/analyze-image', methods=['POST'])
-# def analyze-image():
+@app.route('/api/analyze-image', methods=['POST'])
+def analyze_image():
+    visual_recognition = get_watson_service('watson_vision_combined')
+    
+    url = request.json['text']
+    vr_output = visual_recognition.classify(images_url=url)
 
+    vr_long = str(vr_output)
+    vr_short=''
+    
+    content=vr_output['images'][0]
+
+    for i in content:
+        if(i=='classifiers'):
+            aux=content[i][0]['classes']
+            vr_short = vr_short+'La imagen representa:'
+            for j in aux:
+                vr_short = vr_short+' '+j['class']+' ('+str(j['score'])+'),'
+        elif(i=='faces'):
+            vr_short = vr_short+'\nLa imagen es una cara.\n'
+            aux=content[i][0]
+            for j in aux:
+                if(j!='face_location'):
+                    vr_short = vr_short+j+': '
+                    vr_short = vr_short+str(aux[j])+'\n'
+        elif(i=='text'):
+            vr_short = vr_short+'\nEl texto de la imagen es: \n'+content[i]
+
+    s = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long)
+    #with open('text.html', 'w') as f:
+    #    print(s, file=f)
+    return s
 
 
 @atexit.register
