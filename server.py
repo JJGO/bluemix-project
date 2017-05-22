@@ -85,8 +85,9 @@ def analyze_text():
     emotions = emotions['emotion']['document']['emotion']
 
     audiourl = url_for('static', filename=audiofile)
-
-    s = render_template('output-text.html', text=text, english_text=english_text, audiourl=audiourl, emotions=emotions)
+    show_piechart = any( value > 0 for key, value in emotions.items() )
+    s = render_template('output-text.html', text=text, english_text=english_text, 
+        audiourl=audiourl, emotions=emotions, show_piechart=show_piechart)
     #with open('text.html', 'w') as f:
     #    print(s, file=f)
     return s
@@ -103,12 +104,19 @@ def analyze_image():
     
     content=vr_output['images'][0]
 
+    show_bars=False
+    concepts=None
+
     for i in content:
         if(i=='classifiers'):
+            show_bars=True
+            concepts
             aux=content[i][0]['classes']
             vr_short = vr_short+'La imagen representa:'
             for j in aux:
                 vr_short = vr_short+' '+j['class']+' ('+str(j['score'])+'),'
+            concepts = [ (item['class'], item['score']) for item in aux ]
+            concepts = sorted(concepts, key=lambda k: k[1], reverse=True)
         elif(i=='faces'):
             vr_short = vr_short+'\nLa imagen es una cara.\n'
             aux=content[i][0]
@@ -119,7 +127,7 @@ def analyze_image():
         elif(i=='text'):
             vr_short = vr_short+'\nEl texto de la imagen es: \n'+content[i]
 
-    s = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long)
+    s = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long, concepts=concepts, show_bars=show_bars)
     #with open('text.html', 'w') as f:
     #    print(s, file=f)
     return s

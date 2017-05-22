@@ -1,15 +1,16 @@
 <script type="text/javascript">
   google.charts.load('current', {'packages':['corechart']});
   google.charts.setOnLoadCallback(drawChart);
+  {% set es_emotions = {'anger': 'Ira', 'sadness': 'Tristeza', 'fear': 'Miedo', 'disgust': 'Asco', 'joy': 'Alegría'} %}
   function drawChart() {
     var data = google.visualization.arrayToDataTable([
       ['Emotion', 'Confidence'],
       {% for emotion, value in emotions.items() %}
-      ['{{ emotion|title }}', {{ (100*value)|int }}],
+      ['{{ es_emotions[emotion]|title }}', {{ (100*value)|int }}],
       {% endfor %}
     ]);
     var options = {
-      title: 'Emociones detectadas'
+      pieHole: 0.4,
     };
     var chart = new google.visualization.PieChart(document.getElementById('piechart'));
     chart.draw(data, options);
@@ -24,7 +25,7 @@
           
           <div class="thumbnail">
             <div class="caption">
-              <h3>Original</h3>
+              <h3>Frase original</h3>
               <p id="resultado_original">{{text}}</p>
               <!--<audio controls>
                 <source src="{{ originalaudiourl }}" type="audio/ogg">
@@ -46,7 +47,11 @@
           <div class="thumbnail">
             <div class="caption">
               <h3>Análisis de sentimiento</h3>
-              <div id="piechart" style="width: 650px; height: 500px;"></div>
+              {% if show_piechart %}
+                <div id="piechart" style="width: 650px; height: 500px;"></div>
+              {% else %}
+                <p> No se han podido detectar sentimientos </p>
+              {% endif %}
             </div>
           </div>
 

@@ -1,3 +1,27 @@
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['corechart']});
+  google.charts.setOnLoadCallback(drawChart);
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+      ['Concept', 'Confidence'],
+      {% for concept, value in concepts %}
+      ['{{concept|title}}', {{(100*value)|int}}],
+      {% endfor %}
+    ]);
+
+    var view = new google.visualization.DataView(data);
+    
+    var options = {
+        width: 600,
+        height: 400,
+        bar: {groupWidth: "95%"},
+        legend: { position: "none" },
+    };
+    var chart = new google.visualization.BarChart(document.getElementById('barchart_values'));
+    chart.draw(view, options);
+  }
+  </script>
+
   <div class="container">
     <div class="featured-blocks">
       <div class="row">
@@ -8,7 +32,6 @@
             <div class="caption">
               <h3>Imagen</h3>
               <img src="{{url_img}}">
-              <p>{{vr_long}}</p>
             </div>
           </div>
 
@@ -17,7 +40,11 @@
           <div class="thumbnail">
             <div class="caption">
               <h3>Análisis de la imagen</h3>
-              <p>{{vr_short}}</p>
+              {% if show_bars %}
+                <div id="barchart_values" style="width: 650px; height: 300px;"></div>
+              {% else %}
+                <p>{{vr_short}}</p>
+              {% endif %}
             </div>
           </div>
 
