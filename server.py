@@ -82,10 +82,12 @@ def recent_searches():
     return render_template('history.html', history=unique_sorted_searches)
 
 
-def save_query(text, typ, html):
+def save_query(text, typ, html, query_id=None):
+
     db, client = get_database(app.config['CACHEDB'])
 
-    query_id = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+    if query_id is None:
+        query_id = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
 
     data = {'type': typ, 'query': text, 'html': html, 'id': query_id}
     db.create_document(data)
@@ -94,6 +96,7 @@ def save_query(text, typ, html):
 
 
 def load_query(query_id):
+    print("Loading {0}".format(query_id))
     db, client = get_database(app.config['CACHEDB'])
 
     results = [doc for doc in db if doc['id'] == query_id]
@@ -111,12 +114,26 @@ def load_query(query_id):
 
         return doc['html']
     else:
-        return "Page Not Found"
+
+        db, client = get_database(app.config['VISITDB'])
+
+        results = [doc for doc in db if doc['id'] == query_id]
+
+        if len(results) > 0:
+            doc = results[0]
+            if doc['type'] == 'text':
+                analyze_text(doc['query'], query_id=query_id)
+            elif doc['type'] == 'image':
+                analyze_image(doc['query'], query_id=query_id)
+            return load_query(query_id)
+        else:
+            return "Page Not Found"
 
 
 @app.route('/api/analyze-text', methods=['POST'])
-def analyze_text():
-    text = request.json['text']
+def analyze_text(text=None, query_id=None):
+    if text is None:
+        text = request.json['text']
 
     translator = get_watson_service('language_translator')
     nlu = get_watson_service('natural-language-understanding')
@@ -145,16 +162,17 @@ def analyze_text():
     output = render_template('output-text.html', text=text, english_text=english_text,
                              audiourl=audiourl, emotions=emotions, show_piechart=show_piechart, lang=langs[source_lang])
 
-    text_id = save_query(text, 'text', output)
+    text_id = save_query(text, 'text', output, query_id)
     text_url = '/text/' + text_id
     return jsonify({'url': text_url})
 
 
 @app.route('/api/analyze-image', methods=['POST'])
-def analyze_image():
+def analyze_image(url=None, query_id=None):
+    if url is None:
+        url = request.json['text']
+    
     visual_recognition = get_watson_service('watson_vision_combined')
-
-    url = request.json['text']
 
     vr_output = visual_recognition.classify(images_url=url)
 
@@ -188,13 +206,17 @@ def analyze_image():
 
     output = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long, concepts=concepts, show_bars=show_bars)
 
-    text_id = save_query(url, 'image', output)
+    text_id = save_query(url, 'image', output, query_id)
     image_url = '/image/' + text_id
     return jsonify({'url': image_url})
 
 
 @atexit.register
 def shutdown():
+    if os.path.isdir(tmpfolder):
+        shutil.rmtree(tmpfolder)
+    db, client = get_database(app.config['CACHEDB'])
+    db.delete()
     teardown_databases()
 
 
@@ -205,10 +227,6 @@ if __name__ == '__main__':
             debug = True
 
     tmpfolder = os.path.join('static', app.config['TMPFOLDER'])
-    # if os.path.isdir(tmpfolder):
-    #     shutil.rmtree(tmpfolder)
-    # db, client = get_database(app.config['CACHEDB'])
-    # db.delete()
 
     os.makedirs(tmpfolder, exist_ok=True)
 
