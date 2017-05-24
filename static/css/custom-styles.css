@@ -33,7 +33,7 @@ h3{ font-size: 18px;}
 h4{ font-size: 16px;}
 h5{ font-size: 14px;}
 h6{ font-size: 12px;}
-p{ font-size: 14px; font-family: 'source_sans_proregular'; color: #a5a5a5; margin-right:0; margin-bottom: 15px; line-height: 24px;}
+p{ font-size: 16px; font-family: 'source_sans_proregular'; color: #858585; margin-right:0; margin-bottom: 15px; line-height: 24px;}
 p:nth-last-child(1){
 	margin-bottom: 0;
 }
@@ -43,6 +43,7 @@ img{}
  ul{
  	padding-left: 0;
  	list-style-position: inside;
+ 	list-style-type: none;
  }
 /*---------------------------------------
   Bootsrap Styles Customized
