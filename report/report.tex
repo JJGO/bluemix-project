@@ -32,18 +32,23 @@
 \newpage
 \section{Introducción} % (fold)
 \label{sec:introducción}
-  Se ha desarrollado una aplicación Liberty basada en Python, con los siguientes cinco servicios:
+  Se ha desarrollado una aplicación Flask basada en Python, con los siguientes cinco servicios:
   \begin{itemize}
     \item Language Translator
     \item Visual Recognition
-    \item Test to Speech
+    \item Text to Speech
     \item Natural Language Understanding
     \item Cloudant NoSQL DB
   \end{itemize}
   El objetivo de la aplicación es ofrecer un servicio de análisis de imágenes y de frases en diferentes idiomas.
+
+  La aplicación usa cookies para mantener historial de usuarios de forma independiente. Se soporta también url estáticas para búsquedas ya realizadas. Esto permite poder compartir o salvar búsquedas previas.
+
+  Se ha empleado AJAX para las pantallas de carga y para obtener el historial de los usuarios. La aplicación soporta cacheado de resultados de cara a evitar repetir peticiones en un espacio de tiempo corto debido al alto numero de comunicaciones de microservicios presentes. Esto agiliza mucho consultas del historial.
+
 \begin{figure}[htp!]
     \centering
-    \caption{La aplicación está disponible tanto en Bluemix como en una página web personal. El código está compartido en GitHub, y se ha utilizado Travis para la Integración Continua.}
+    \caption{La aplicación está disponible tanto en Bluemix como en una página web personal. El código está compartido en GitHub, y se ha utilizado TravisCI para la Integración Continua.}
     \label{fig:webs}
     \includegraphics[width=\textwidth]{webs1}
 \end{figure}
@@ -54,7 +59,7 @@
 
 \begin{figure}[htp!]
     \centering
-    \caption{Bluemix: \url{http://bluemix-project.eu-gb.mybluemix.net/}}
+    \caption{Bluemix: \url{http://erittely.josejg.com} \newline{} \url{http://erittely.eu-gb.mybluemix.net/} }
     \label{fig:blue}
     \includegraphics[width=\textwidth]{blue}
 \end{figure}
@@ -76,7 +81,7 @@
 
 \begin{figure}[htp!]
     \centering
-    \caption{El uso de Integración Continua queda reflejado en GitHub, donde el código aparece como 'passing'}
+    \caption{El uso de Integración Continua queda reflejado en GitHub, donde el código aparece como 'build:passing'}
     \label{fig:git2}
     \includegraphics[width=\textwidth]{git2}
 \end{figure}
