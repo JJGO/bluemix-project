@@ -211,8 +211,15 @@ def analyze_image(url=None, query_id=None):
     return jsonify({'url': image_url})
 
 
+def init():
+    tmpfolder = os.path.join('static', app.config['TMPFOLDER'])
+    os.makedirs(tmpfolder, exist_ok=True)
+    return True
+
+
 @atexit.register
 def shutdown():
+    tmpfolder = os.path.join('static', app.config['TMPFOLDER'])
     if os.path.isdir(tmpfolder):
         shutil.rmtree(tmpfolder)
     db, client = get_database(app.config['CACHEDB'])
@@ -225,9 +232,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if '--debug' in sys.argv:
             debug = True
-
-    tmpfolder = os.path.join('static', app.config['TMPFOLDER'])
-
-    os.makedirs(tmpfolder, exist_ok=True)
+    init()
 
     app.run(host='0.0.0.0', port=port, debug=debug)
