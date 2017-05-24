@@ -68,3 +68,5 @@ target/
 crypt-key
 
 .ipynb_checkpoints/
+
+*.ogg

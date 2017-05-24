@@ -1,0 +1,76 @@
+{% if show_piechart %}
+<script type="text/javascript">
+  google.charts.load('current', {'packages':['corechart']});
+  google.charts.setOnLoadCallback(drawChart);
+  {% set es_emotions = {'anger': 'Ira', 'sadness': 'Tristeza', 'fear': 'Miedo', 'disgust': 'Asco', 'joy': 'Alegría'} %}
+  function drawChart() {
+    var data = google.visualization.arrayToDataTable([
+      ['Emotion', 'Confidence'],
+      {% for emotion, value in emotions.items() %}
+      ['{{ es_emotions[emotion]|title }}', {{ (100*value)|int }}],
+      {% endfor %}
+    ]);
+    var options = {
+      pieHole: 0.4,
+    };
+    var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+    chart.draw(data, options);
+  }
+</script>
+{% endif %}
+
+  <div class="container">
+    <div class="featured-blocks">
+      <div class="row">
+        
+        <div class=" col-md-9">
+          
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Frase original</h3>
+              <p id="resultado_original">{{text}}</p>
+              <!--<audio controls>
+                <source src="{{ originalaudiourl }}" type="audio/ogg">
+                Your browser does not support this audio format.
+              </audio>
+              <br>-->
+              <p id="idioma_original">Se ha identificado el idioma: {{lang}}</p>
+              <br>
+              <h3>Traducción en inglés</h3>
+              <p id="resultado_traduccion">{{english_text}}</p>
+              <audio controls>
+                <source src="{{ audiourl }}" type="audio/ogg">
+                Your browser does not support this audio format.
+              </audio>
+            </div>
+          </div>
+
+          <br>
+          
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Análisis de sentimiento</h3>
+              {% if show_piechart %}
+                <div id="piechart" style="width: 650px; height: 500px;"></div>
+              {% else %}
+                <p> No se han podido detectar sentimientos </p>
+              {% endif %}
+            </div>
+          </div>
+
+          <br>
+
+        </div>
+
+        <div class=" col-md-3">
+          <div class="thumbnail">
+            <div class="caption">
+              <h3>Historial</h3>
+              <p id="resultado_historial"> </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>

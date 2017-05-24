@@ -1,6 +1,6 @@
 ---
 applications:
- - name: bluemix-project
+ - name: erittely
    random-route: false
    memory: 128M
    buildpack: python_buildpack

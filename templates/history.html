@@ -1,0 +1,11 @@
+<ul>
+{% for entry in history %}
+    <li>
+    {% if entry.type == 'text' %}
+        <a href='/{{ entry.type}}/{{entry.id}}' onclick='$("body").addClass("loading");'>{{entry.query|truncate(15)}}</a>
+    {% elif entry.type == 'image' %}
+        <a href='/{{ entry.type}}/{{entry.id}}' onclick='$("body").addClass("loading");'>Imagen</a>
+    {% endif %}
+    </li>
+{% endfor %}
+</ul>

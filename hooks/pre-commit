@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# IGNORE=E221,E241,E272,E226
+
+git stash -q --keep-index
+
+py.test
+
+ERRORS=$?
+
+# flake8
+
+# STYLE=$?
+
+git stash pop -q
+
+[ $ERRORS -ne 0 ] && exit 1
+
+# [ $STYLE -ne 0 ] && exit 1
+
+exit 0

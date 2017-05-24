@@ -2,33 +2,99 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>App Minima de Traduccion</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="El mejor servicio de análisis de frases e imágenes online">
+  <meta name="author" content="JJ y Lucia">
 
-    <!-- Bootstrap -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link href="static/styles.css" rel="stylesheet">
+  <title>Erittely</title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/bootstrap.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/image-effects.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/custom-styles.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/font-awesome.css') }}">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/font-awesome-ie7.css') }}">
+  <link rel="icon" href="{{ url_for('static',filename='images/favicon.ico') }}" />
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <h1>App Minima de Traduccion en Bluemix.</h1>
-        <div id="nameInput" class="input-group-lg center-block helloInput">
-            <p class="lead">Introduce el texto a traducir?</p>
-            <input id="user_name" type="text" class="form-control" placeholder="nombre" aria-describedby="sizing-addon1" value="" />
+
+  <div class="container">
+    <div class="row">
+      <div class="site-header spacing-t">
+        <div class="col-md-6 ">
+          <div class="site-name spacing-b">
+            <a href="/"><h1>Erittely</h1></a>
+            <h5>El mejor servicio de análisis de frases e imágenes online</h5>
+          </div>
         </div>
-        <p id="response" class="lead text-center"></p>
-
-        <p id="databaseNames" class="lead text-center"></p>
+      </div>
     </div>
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  </div>
 
-    <script src="static/script-main.js" ></script>
+  <div class="container">
+    <div class="subscribe">
+
+      <div id="input_frase_all">
+        <h1>Análisis de Frase</h1>
+        <div class="row">
+          <div id="input_frase" class="input-group-lg center-block helloInput">
+            <input id="input_frase_arg" type="text" class="form-control" placeholder="Frase" aria-describedby="sizing-addon1" value="" />
+            <br>
+          </div>
+        </div>
+      </div>
+
+      <div id="input_imagen_all">
+        <h1>Análisis de imagen</h1>
+        <div class="row">
+          <div id="input_imagen" class="input-group-lg center-block helloInput">
+            <input id="input_imagen_arg" type="text" class="form-control" placeholder="URL de imagen" aria-describedby="sizing-addon1" value="" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="response">
+    {{ output | safe }}
+    </div>
+
+    <div class="ruler"></div>
+  </div>
+
+
+  {% if not output %}
+  <div class="container" id="banner-fig">
+    <br>
+    <div class="banner">
+      <div class="banner-item">
+      </div>
+      <div class="banner-item">
+      </div>
+      <div class="banner-item">
+      </div>
+      <div class="banner-item ">
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+  <!-- Bootstrap core JavaScript
+  ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="{{ url_for('static',filename='js/html5shiv.js') }}"></script>
+  <script src="{{ url_for('static',filename='js/respond.min.js') }}"></script>
+  <script src="{{ url_for('static',filename='js/jquery-1.9.1.js') }}"></script>
+  <script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
+  <script src="{{ url_for('static',filename='js/modernizr-2.6.2-respond-1.1.0.min.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/script-main.js') }}" ></script>
+
+<div class="modal"></div>
+
 </body>
-
 </html>
