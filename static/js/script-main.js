@@ -5,7 +5,7 @@
       var text = $('#input_frase_arg').val();
         if (e.which == 13 && text.length > 0) { //catch Enter key
           //POST request to API to create a new visitor entry in the database
-            analyze_text(text);
+            analyze(text, "text");
         }
     });
 
@@ -14,50 +14,26 @@
       var text = $('#input_imagen_arg').val();
         if (e.which == 13 && text.length > 0) { //catch Enter key
           //POST request to API to create a new visitor entry in the database
-            analyze_image(text);
+            analyze(text, "image");
         }
     });
 
-    function analyze_text(text){
+    function analyze(text, type){
       $.ajax({
           method: "POST",
-          url: "./api/analyze-text",
+          url: "/api/analyze-"+type,
           contentType: "application/json",
+          dataType: 'json',
           data: JSON.stringify({text: text })
         })
       .done(function(data) {
-          // $('#input_frase').hide();
-          // $('#input_imagen_all').hide();
-          $('#banner-fig').hide();
-          $('#input_frase_arg').val("");
-          $('#response').html(data);
-          getHistory();
-      });
-    };
-
-
-
-    function analyze_image(text){
-
-      $.ajax({
-        method: "POST",
-        url: "./api/analyze-image",
-        contentType: "application/json",
-        data: JSON.stringify({text: text })
-      })
-      .done(function(data) {
-          // $('#input_imagen').hide();
-          // $('#input_frase_all').hide();
-          $('#banner-fig').hide();
-          $('#input_imagen_arg').val("");
-          $('#response').html(data);
-          getHistory();
+          window.location.href = data.url;
       });
     };
 
     //Retreive all the visitors from the database
     function getHistory(){
-      $.get("./api/recent")
+      $.get("/api/recent")
           .done(function(data) {
               if(data.length > 0) {
                 $('#resultado_historial').html(data);

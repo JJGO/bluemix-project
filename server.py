@@ -18,7 +18,8 @@ cf_deployment_tracker.track()
 
 app = Flask(__name__)
 
-app.config['DATABASE'] = 'mydb'
+app.config['CACHEDB'] = 'cache'
+app.config['VISITDB'] = 'visits'
 app.config['TMPFOLDER'] = 'tmp'
 app.secret_key = "\xfd4\xadtJ\x1a'\xed\xe9\x0e`{\xd4\x8a\x11.ah\x87j\t\xad\x9e\xac"
 
@@ -50,41 +51,100 @@ def home():
 # */
 
 
+@app.route('/text/<text_id>/')
+def get_text(text_id):
+    output = load_query(text_id)
+    return render_template('index.html', output=output)
+
+
+@app.route('/image/<image_id>/')
+def get_image(image_id):
+    output = load_query(image_id)
+    return render_template('index.html', output=output)
+
+
 @app.route('/api/recent')
 def recent_searches():
     user = get_user()
-    db, client = get_database(app.config['DATABASE'])
+    db, client = get_database(app.config['VISITDB'])
 
-    past_searches = [({'query': doc['query'], 'type': doc['type']}, doc['timestamp']) for doc in db if doc['user'] == user][::-1]
+    past_searches = [({'query': doc['query'], 'type': doc['type'], 'id':doc['id']}, doc['timestamp']) for doc in db if doc['user'] == user][::-1]
 
     sorted_searches = [name for (name, timestamp) in sorted(past_searches, key=lambda x: x[1], reverse=True)]
-    sorted_searches = sorted_searches[:10]
-    return render_template('history.html', history=sorted_searches)
+
+    unique_sorted_searches, unique_ids = [], []
+    for s in sorted_searches:
+        if s['query'] not in unique_ids:
+            unique_ids.append(s['query'])
+            unique_sorted_searches.append(s)
+
+    unique_sorted_searches = unique_sorted_searches[:10]
+    return render_template('history.html', history=unique_sorted_searches)
 
 
-def save_search(text, typ):
-    db, client = get_database(app.config['DATABASE'])
+def save_query(text, typ, html, query_id=None):
 
-    user = get_user()
-    timestamp = datetime.datetime.now().isoformat()
+    db, client = get_database(app.config['CACHEDB'])
 
-    data = {'user': user, 'timestamp': timestamp, 'type': typ, 'query': text}
+    if query_id is None:
+        query_id = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
+
+    data = {'type': typ, 'query': text, 'html': html, 'id': query_id}
     db.create_document(data)
-    return data
+
+    return query_id
+
+
+def load_query(query_id):
+    print("Loading {0}".format(query_id))
+    db, client = get_database(app.config['CACHEDB'])
+
+    results = [doc for doc in db if doc['id'] == query_id]
+
+    if len(results) > 0:
+        doc = results[0]
+
+        db, client = get_database(app.config['VISITDB'])
+
+        user = get_user()
+        timestamp = datetime.datetime.now().isoformat()
+
+        data = {'user': user, 'timestamp': timestamp, 'type': doc['type'], 'query': doc['query'], 'html': doc['html'], 'id': query_id}
+        db.create_document(data)
+
+        return doc['html']
+    else:
+
+        db, client = get_database(app.config['VISITDB'])
+
+        results = [doc for doc in db if doc['id'] == query_id]
+
+        if len(results) > 0:
+            doc = results[0]
+            if doc['type'] == 'text':
+                analyze_text(doc['query'], query_id=query_id)
+            elif doc['type'] == 'image':
+                analyze_image(doc['query'], query_id=query_id)
+            return load_query(query_id)
+        else:
+            return "Page Not Found"
+
 
 @app.route('/api/analyze-text', methods=['POST'])
-def analyze_text():
-    text = request.json['text']
-
-    save_search(text, 'text')
+def analyze_text(text=None, query_id=None):
+    if text is None:
+        text = request.json['text']
 
     translator = get_watson_service('language_translator')
     nlu = get_watson_service('natural-language-understanding')
     text_to_speech = get_watson_service('text_to_speech')
-    voices = get_speech_voices()
+    langs = {x['language']: x['name'] for x in translator.get_identifiable_languages()['languages']}
 
     source_lang = translator.identify(text)['languages'][0]['language']
-    english_text = translator.translate(text, source=source_lang, target='en')
+    if source_lang == 'en':
+        english_text = text
+    else:
+        english_text = translator.translate(text, source=source_lang, target='en')
 
     audioEN = text_to_speech.synthesize(english_text, accept='audio/ogg', voice="en-GB_KateVoice")
 
@@ -99,20 +159,20 @@ def analyze_text():
 
     audiourl = url_for('static', filename=audiofile)
     show_piechart = any(value > 0 for key, value in emotions.items())
-    s = render_template('output-text.html', text=text, english_text=english_text,
-                        audiourl=audiourl, emotions=emotions, show_piechart=show_piechart)
-    # with open('text.html', 'w') as f:
-    #    print(s, file=f)
-    return s
+    output = render_template('output-text.html', text=text, english_text=english_text,
+                             audiourl=audiourl, emotions=emotions, show_piechart=show_piechart, lang=langs[source_lang])
+
+    text_id = save_query(text, 'text', output, query_id)
+    text_url = '/text/' + text_id
+    return jsonify({'url': text_url})
 
 
 @app.route('/api/analyze-image', methods=['POST'])
-def analyze_image():
+def analyze_image(url=None, query_id=None):
+    if url is None:
+        url = request.json['text']
+    
     visual_recognition = get_watson_service('watson_vision_combined')
-
-    url = request.json['text']
-
-    save_search(url, 'image')
 
     vr_output = visual_recognition.classify(images_url=url)
 
@@ -144,14 +204,19 @@ def analyze_image():
         elif(i == 'text'):
             vr_short = vr_short+'\nEl texto de la imagen es: \n'+content[i]
 
-    s = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long, concepts=concepts, show_bars=show_bars)
-    # with open('text.html', 'w') as f:
-    #    print(s, file=f)
-    return s
+    output = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long, concepts=concepts, show_bars=show_bars)
+
+    text_id = save_query(url, 'image', output, query_id)
+    image_url = '/image/' + text_id
+    return jsonify({'url': image_url})
 
 
 @atexit.register
 def shutdown():
+    if os.path.isdir(tmpfolder):
+        shutil.rmtree(tmpfolder)
+    db, client = get_database(app.config['CACHEDB'])
+    db.delete()
     teardown_databases()
 
 
@@ -162,8 +227,7 @@ if __name__ == '__main__':
             debug = True
 
     tmpfolder = os.path.join('static', app.config['TMPFOLDER'])
-    if os.path.isdir(tmpfolder):
-        shutil.rmtree(tmpfolder)
-    os.mkdir(tmpfolder)
+
+    os.makedirs(tmpfolder, exist_ok=True)
 
     app.run(host='0.0.0.0', port=port, debug=debug)
