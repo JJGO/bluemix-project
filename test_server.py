@@ -104,3 +104,17 @@ def test_analyze_image_output(image_request):
     assert response.status_code == 200
 
     assert b'Framework' in response.data
+
+
+def test_history(text_request, visitDB):
+    response = testapp.get('/api/recent')
+    assert response.status_code == 200
+
+    response_json = json.loads(text_request.data.decode())
+    url = response_json['url']
+
+    response = testapp.get(url, follow_redirects=True)
+
+    response = testapp.get('/api/recent')
+    assert response.status_code == 200
+    assert b'Nada' in response.data
