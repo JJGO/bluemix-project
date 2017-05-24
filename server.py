@@ -55,16 +55,29 @@ def recent_searches():
     user = get_user()
     db, client = get_database(app.config['DATABASE'])
 
-    past_searches = [(doc['name'], doc['timestamp']) for doc in db if doc['user'] == user][::-1]
+    past_searches = [({'query': doc['query'], 'type': doc['type']}, doc['timestamp']) for doc in db if doc['user'] == user][::-1]
 
     sorted_searches = [name for (name, timestamp) in sorted(past_searches, key=lambda x: x[1], reverse=True)]
+    sorted_searches = sorted_searches[:10]
+    return render_template('history.html', history=sorted_searches)
 
-    return jsonify(sorted_searches)
 
+def save_search(text, typ):
+    db, client = get_database(app.config['DATABASE'])
+
+    user = get_user()
+    timestamp = datetime.datetime.now().isoformat()
+
+    data = {'user': user, 'timestamp': timestamp, 'type': typ, 'query': text}
+    db.create_document(data)
+    return data
 
 @app.route('/api/analyze-text', methods=['POST'])
 def analyze_text():
     text = request.json['text']
+
+    save_search(text, 'text')
+
     translator = get_watson_service('language_translator')
     nlu = get_watson_service('natural-language-understanding')
     text_to_speech = get_watson_service('text_to_speech')
@@ -85,50 +98,54 @@ def analyze_text():
     emotions = emotions['emotion']['document']['emotion']
 
     audiourl = url_for('static', filename=audiofile)
-    show_piechart = any( value > 0 for key, value in emotions.items() )
-    s = render_template('output-text.html', text=text, english_text=english_text, 
-        audiourl=audiourl, emotions=emotions, show_piechart=show_piechart)
-    #with open('text.html', 'w') as f:
+    show_piechart = any(value > 0 for key, value in emotions.items())
+    s = render_template('output-text.html', text=text, english_text=english_text,
+                        audiourl=audiourl, emotions=emotions, show_piechart=show_piechart)
+    # with open('text.html', 'w') as f:
     #    print(s, file=f)
     return s
+
 
 @app.route('/api/analyze-image', methods=['POST'])
 def analyze_image():
     visual_recognition = get_watson_service('watson_vision_combined')
-    
+
     url = request.json['text']
+
+    save_search(url, 'image')
+
     vr_output = visual_recognition.classify(images_url=url)
 
     vr_long = str(vr_output)
-    vr_short=''
-    
-    content=vr_output['images'][0]
+    vr_short = ''
 
-    show_bars=False
-    concepts=None
+    content = vr_output['images'][0]
+
+    show_bars = False
+    concepts = None
 
     for i in content:
-        if(i=='classifiers'):
-            show_bars=True
+        if i == 'classifiers':
+            show_bars = True
             concepts
-            aux=content[i][0]['classes']
+            aux = content[i][0]['classes']
             vr_short = vr_short+'La imagen representa:'
             for j in aux:
                 vr_short = vr_short+' '+j['class']+' ('+str(j['score'])+'),'
-            concepts = [ (item['class'], item['score']) for item in aux ]
+            concepts = [(item['class'], item['score']) for item in aux]
             concepts = sorted(concepts, key=lambda k: k[1], reverse=True)
-        elif(i=='faces'):
+        elif(i == 'faces'):
             vr_short = vr_short+'\nLa imagen es una cara.\n'
-            aux=content[i][0]
+            aux = content[i][0]
             for j in aux:
-                if(j!='face_location'):
+                if(j != 'face_location'):
                     vr_short = vr_short+j+': '
                     vr_short = vr_short+str(aux[j])+'\n'
-        elif(i=='text'):
+        elif(i == 'text'):
             vr_short = vr_short+'\nEl texto de la imagen es: \n'+content[i]
 
     s = render_template('output-image.html', url_img=url, vr_short=vr_short, vr_long=vr_long, concepts=concepts, show_bars=show_bars)
-    #with open('text.html', 'w') as f:
+    # with open('text.html', 'w') as f:
     #    print(s, file=f)
     return s
 
