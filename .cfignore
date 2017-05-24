@@ -2,3 +2,8 @@
 LICENSE
 README.md
 vcap-local.json
+*.ogg
+.ipynb_checkpoints/
+crypt-key
+.python-version
+__pycache__/
