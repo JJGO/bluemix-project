@@ -14,7 +14,7 @@
     font-family: 'source_sans_proregular';
     src: url('../fonts/sourcesanspro-regular-webfont.eot');
     src: url('../fonts/sourcesanspro-regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('../fonts/sourcesanspro-regular-webfont.woff') format('woff'),
+         /*url('../fonts/sourcesanspro-regular-webfont.woff') format('woff'),*/
          url('../fonts/sourcesanspro-regular-webfont.ttf') format('truetype'),
          url('../fonts/sourcesanspro-regular-webfont.svg#source_sans_proregular') format('svg');
     font-weight: normal;
@@ -70,10 +70,10 @@ img{}
 	}
 .spacing{
 	padding: 30px 0;
-}	
+}
 .spacing-r{
 	padding-right: 30px;
-}	
+}
 .spacing-l{
 	padding-left: 30px;
 }
@@ -157,7 +157,7 @@ border-radius: 5px;
 .radi-c3{
 	-webkit-border-radius: 0 0 5px 0;
 	 		-moz-border-radius: 0 0 5px 0;
-	 		border-radius: 0 0 5px 0; 		
+	 		border-radius: 0 0 5px 0;
 }
 .radi-c4{
 	-webkit-border-radius: 0 0 0 5px;
