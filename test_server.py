@@ -82,3 +82,25 @@ def test_analyze_image(image_request, cacheDB):
     assert query_id in [doc['id'] for doc in cacheDB]
 
 
+def test_analyze_text_output(text_request):
+    response_json = json.loads(text_request.data.decode())
+    url = response_json['url']
+
+    response = testapp.get(url, follow_redirects=True)
+    print(response.data)
+    assert response.status_code == 200
+
+    assert b'Spanish' in response.data
+    assert b'Nothing' in response.data
+    assert b'Tristeza' in response.data
+
+
+def test_analyze_image_output(image_request):
+    response_json = json.loads(image_request.data.decode())
+    url = response_json['url']
+
+    response = testapp.get(url, follow_redirects=True)
+    print(response.data)
+    assert response.status_code == 200
+
+    assert b'Framework' in response.data
