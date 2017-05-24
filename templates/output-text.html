@@ -1,3 +1,4 @@
+{% if show_piechart %}
 <script type="text/javascript">
   google.charts.load('current', {'packages':['corechart']});
   google.charts.setOnLoadCallback(drawChart);
@@ -16,6 +17,7 @@
     chart.draw(data, options);
   }
 </script>
+{% endif %}
 
   <div class="container">
     <div class="featured-blocks">
