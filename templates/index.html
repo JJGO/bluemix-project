@@ -16,6 +16,7 @@
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/font-awesome.css') }}">
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/font-awesome-ie7.css') }}">
 
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </head>
 
 <body>
@@ -25,7 +26,7 @@
       <div class="site-header spacing-t">
         <div class="col-md-4 ">
           <div class="site-name spacing-b">
-            <a href="."><h1>Erittely</h1></a>
+            <a href="/"><h1>Erittely</h1></a>
             <h6>El mejor servicio de análisis de frases e imágenes online</h6>
           </div>
         </div>
@@ -57,13 +58,14 @@
     </div>
 
     <div id="response">
+    {{ output | safe }}
     </div>
 
     <div class="ruler"></div>
   </div>
 
 
-
+  {% if not output %}
   <div class="container" id="banner-fig">
     <br>
     <div class="banner">
@@ -77,6 +79,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
 
   <!-- Bootstrap core JavaScript
@@ -89,7 +92,6 @@
   <script src="{{ url_for('static',filename='js/modernizr-2.6.2-respond-1.1.0.min.js') }}"></script>
 
   <script src="{{ url_for('static',filename='js/script-main.js') }}" ></script>
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 <div class="modal"></div>
 

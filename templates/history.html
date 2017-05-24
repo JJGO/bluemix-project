@@ -2,9 +2,9 @@
 {% for entry in history %}
     <li>
     {% if entry.type == 'text' %}
-        <a href='javascript:analyze_text( "{{ entry.query}}" );'>{{entry.query|truncate(15)}}</a>
+        <a href='/{{ entry.type}}/{{entry.id}}'>{{entry.query|truncate(15)}}</a>
     {% elif entry.type == 'image' %}
-        <a href='javascript:analyze_image( "{{ entry.query}}" );'>Imagen</a>
+        <a href='/{{ entry.type}}/{{entry.id}}'>Imagen</a>
     {% endif %}
     </li>
 {% endfor %}
