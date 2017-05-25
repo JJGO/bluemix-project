@@ -154,7 +154,7 @@ def analyze_text(text=None, query_id=None):
     with open(os.path.join('static', audiofile), 'wb') as f:
         f.write(audioEN)
 
-    emotions = nlu.analyze(text=english_text, features=[features.Emotion()])
+    emotions = nlu.analyze(text=english_text, features=[features.Emotion()], language='en')
     emotions = emotions['emotion']['document']['emotion']
 
     audiourl = url_for('static', filename=audiofile)
